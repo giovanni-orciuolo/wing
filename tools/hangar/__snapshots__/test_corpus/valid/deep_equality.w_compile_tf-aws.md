@@ -1,5 +1,42 @@
 # [deep_equality.w](../../../../../examples/tests/valid/deep_equality.w) | compile | tf-aws
 
+## Cat.Struct.js
+```js
+module.exports = function(stdStruct, fromInline) {
+  class Cat {
+    static _schema = {
+      id: "/Cat",
+      type: "object",
+      properties: {
+        name: { type: "string" },
+        age: { type: "number" },
+      },
+      required: [
+        "name",
+        "age",
+      ]
+    }
+    static _getDependencies() {
+      return {
+      }
+    }
+    static _validate(obj) {
+      const validator = stdStruct._getValidator(this._getDependencies());
+      const errors = validator.validate(obj, this._schema).errors;
+      if (errors.length > 0) {
+        throw new Error(`unable to parse ${this.name}:\n ${errors.join("\n- ")}`);
+      }
+      return obj;
+    }
+    static _toInflightType(context) {
+      return fromInline(`require("./Cat.Struct.js")(${ context._lift(stdStruct) })`);
+    }
+  }
+  return Cat;
+};
+
+```
+
 ## inflight.$Closure1.js
 ```js
 module.exports = function({ $numA, $numB, $strA, $strB }) {
@@ -1513,6 +1550,7 @@ class $Root extends $stdlib.std.Resource {
     const arrayC = Object.freeze([4, 5, 6]);
     this.node.root.new("@winglang/sdk.std.Test",std.Test,this,"test:Array with the same value",new $Closure9(this,"$Closure9"));
     this.node.root.new("@winglang/sdk.std.Test",std.Test,this,"test:Array with different values",new $Closure10(this,"$Closure10"));
+    const Cat = require("./Cat.Struct.js")($stdlib.std.Struct, $stdlib.core.NodeJsCode.fromInline);
     const cat1 = {
     "name": "Mittens",
     "age": 3,}

@@ -1,5 +1,80 @@
 # [optionals.w](../../../../../examples/tests/valid/optionals.w) | compile | tf-aws
 
+## Name.Struct.js
+```js
+module.exports = function(stdStruct, fromInline) {
+  class Name {
+    static _schema = {
+      id: "/Name",
+      type: "object",
+      properties: {
+        first: { type: "string" },
+        last: { type: "string" },
+      },
+      required: [
+        "first",
+      ]
+    }
+    static _getDependencies() {
+      return {
+      }
+    }
+    static _validate(obj) {
+      const validator = stdStruct._getValidator(this._getDependencies());
+      const errors = validator.validate(obj, this._schema).errors;
+      if (errors.length > 0) {
+        throw new Error(`unable to parse ${this.name}:\n ${errors.join("\n- ")}`);
+      }
+      return obj;
+    }
+    static _toInflightType(context) {
+      return fromInline(`require("./Name.Struct.js")(${ context._lift(stdStruct) })`);
+    }
+  }
+  return Name;
+};
+
+```
+
+## Payload.Struct.js
+```js
+module.exports = function(stdStruct, fromInline) {
+  class Payload {
+    static _schema = {
+      id: "/Payload",
+      type: "object",
+      properties: {
+        a: { type: "string" },
+        b: { type: "object", patternProperties: { ".*": { type: "string" } } },
+        c: { "$ref": "/cloud" },
+      },
+      required: [
+        "a",
+      ]
+    }
+    static _getDependencies() {
+      return {
+        "/cloud": require("./cloud.Struct.js")()._schema,
+        ...require("./cloud.Struct.js")()._getDependencies(),
+      }
+    }
+    static _validate(obj) {
+      const validator = stdStruct._getValidator(this._getDependencies());
+      const errors = validator.validate(obj, this._schema).errors;
+      if (errors.length > 0) {
+        throw new Error(`unable to parse ${this.name}:\n ${errors.join("\n- ")}`);
+      }
+      return obj;
+    }
+    static _toInflightType(context) {
+      return fromInline(`require("./Payload.Struct.js")(${ context._lift(stdStruct) })`);
+    }
+  }
+  return Payload;
+};
+
+```
+
 ## inflight.$Closure1.js
 ```js
 module.exports = function({ $__payloadWithBucket_c_____null_, $__payloadWithoutOptions_b_____null_, $payloadWithBucket_c }) {
@@ -390,6 +465,7 @@ class $Root extends $stdlib.std.Resource {
     const optionalSup = new Super(this,"Super");
     const s = (optionalSup ?? new Sub(this,"Sub"));
     {((cond) => {if (!cond) throw new Error("assertion failed: s.name == \"Super\"")})((((a,b) => { try { return require('assert').deepStrictEqual(a,b) === undefined; } catch { return false; } })(s.name,"Super")))};
+    const Name = require("./Name.Struct.js")($stdlib.std.Struct, $stdlib.core.NodeJsCode.fromInline);
     let name = {
     "first": "John",
     "last": "Doe",}
@@ -509,6 +585,7 @@ class $Root extends $stdlib.std.Resource {
         {((cond) => {if (!cond) throw new Error("assertion failed: o.value == 1")})((((a,b) => { try { return require('assert').deepStrictEqual(a,b) === undefined; } catch { return false; } })(o.value,1)))};
       }
     }
+    const Payload = require("./Payload.Struct.js")($stdlib.std.Struct, $stdlib.core.NodeJsCode.fromInline);
     const payloadWithoutOptions = {
     "a": "a",}
     ;
